@@ -13,7 +13,6 @@ class TurtleSpawner(Node):
     def __init__(self):
         super().__init__("turtle_spawner")
         
-        self.create_service(Kill, "kill_server",self.call_kill_server)
         self.publisher_ = self.create_publisher(Turtle,"alive_turtles",10)
         
 
@@ -40,30 +39,13 @@ class TurtleSpawner(Node):
         try:
             response = future.result()
             turtle = (response.name,x,y)
-            self.get_logger().info(f"Turtle name: {turtle[0]} spawned at {turtle[1]},{turtle[2]}")
             msg = Turtle()
             msg.name, msg.x_coord, msg.y_coord = turtle
             self.publisher_.publish(msg)
         except Exception as e:
             self.get_logger().error("Error %r" %(e,))
 
-    def call_kill_server(self,name):
-        client = self.create_client(Kill,"kill")
-        while not client.wait_for_service(1.0):
-            self.get_logger().warn("Waiting on Kill Server...")
-        
-        request = Kill.Request()
-        request.name = name
-        future = client.call_async(request)
-        future.add_done_callback(partial(self.callback_kill_server))
-
-    def callback_kill_server(self,future):
-        try:
-            response = future.result()
-            self.get_logger().info(f"Turtle {response.name} has been killed")
-        except Exception as e:
-            self.get_logger().error("Error %r" %(e,))
-
+   
 
 
 
